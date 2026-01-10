@@ -4,13 +4,26 @@ endif
 
 LCC = $(GBDK_HOME)/bin/lcc
 
-all: main.gb
+SRCDIR = src
+BUILDDIR = build
+RELEASEDIR = release
 
-main.o: main.c
+CSOURCES = $(wildcard $(SRCDIR)/*.c)
+OBJS = $(CSOURCES:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
+
+all: $(RELEASEDIR)/main.gb
+
+$(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BUILDDIR)
 	$(LCC) -c -o $@ $<
 
-main.gb: main.o
-	$(LCC) -o $@ $<
+$(RELEASEDIR)/main.gb: $(OBJS) | $(RELEASEDIR)
+	$(LCC) -o $@ $(OBJS)
+
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
+
+$(RELEASEDIR):
+	mkdir -p $(RELEASEDIR)
 
 clean:
-	rm -f *.o *.lst *.map *.gb *~ *.rel *.cdb *.adb *.ihx *.lnk *.sym *.asm *.noi *.rst
+	rm -rf $(BUILDDIR) $(RELEASEDIR)
