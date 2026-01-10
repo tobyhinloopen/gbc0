@@ -11,12 +11,13 @@ RELEASEDIR = release
 CSOURCES = $(wildcard $(SRCDIR)/*.c)
 OBJS = $(CSOURCES:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
 
-all: $(RELEASEDIR)/main.gb
+all: $(RELEASEDIR)/gbc0.gb
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BUILDDIR)
 	$(LCC) -c -o $@ $<
 
-$(RELEASEDIR)/main.gb: $(OBJS) | $(RELEASEDIR)
+$(RELEASEDIR)/gbc0.gb: $(OBJS) | $(RELEASEDIR)
+	rm -f $(RELEASEDIR)/*.sav $(RELEASEDIR)/*.ss*
 	$(LCC) -o $@ $(OBJS)
 
 $(BUILDDIR):
