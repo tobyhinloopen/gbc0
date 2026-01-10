@@ -5,26 +5,26 @@ endif
 LCC = $(GBDK_HOME)/bin/lcc
 
 SRCDIR = src
-BUILDDIR = build
-RELEASEDIR = release
+OBJDIR = obj
+BINDIR = bin
 
 CSOURCES = $(wildcard $(SRCDIR)/*.c)
-OBJS = $(CSOURCES:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
+OBJS = $(CSOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
-all: $(RELEASEDIR)/gbc0.gb
+all: $(BINDIR)/gbc0.gb
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BUILDDIR)
+$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(LCC) -c -o $@ $<
 
-$(RELEASEDIR)/gbc0.gb: $(OBJS) | $(RELEASEDIR)
-	rm -f $(RELEASEDIR)/*.sav $(RELEASEDIR)/*.ss*
-	$(LCC) -o $@ $(OBJS)
+$(BINDIR)/gbc0.gb: $(OBJS) | $(BINDIR)
+	rm -f $(BINDIR)/*.sav $(BINDIR)/*.ss*
+	$(LCC) -Wm-yc -o $@ $(OBJS)
 
-$(BUILDDIR):
-	mkdir -p $(BUILDDIR)
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
 
-$(RELEASEDIR):
-	mkdir -p $(RELEASEDIR)
+$(BINDIR):
+	mkdir -p $(BINDIR)
 
 clean:
-	rm -rf $(BUILDDIR) $(RELEASEDIR)
+	rm -rf $(OBJDIR) $(BINDIR)
