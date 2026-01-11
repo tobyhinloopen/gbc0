@@ -13,5 +13,6 @@
 #define block_tiles_palette_1c3 167
 
 #define block_tiles_size 9
+#define block_tiles_tile_size 16
 
-extern const uint8_t block_tiles[ block_tiles_size * 16 ];
+extern const uint8_t block_tiles[block_tiles_size * block_tiles_tile_size];
