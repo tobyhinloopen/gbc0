@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #define block_tiles_palette_0c0 6076
 #define block_tiles_palette_0c1 8935
 #define block_tiles_palette_0c2 6596
@@ -12,4 +14,4 @@
 
 #define block_tiles_size 9
 
-extern const unsigned char block_tiles[ block_tiles_size * 16 ];
+extern const uint8_t block_tiles[ block_tiles_size * 16 ];

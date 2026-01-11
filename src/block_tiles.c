@@ -1,5 +1,4 @@
 #include "block_tiles.h"
-#include <stdint.h>
 
 const uint8_t block_tiles[ block_tiles_size * 16 ] =
 {
