@@ -10,4 +10,6 @@
 #define block_tiles_palette_1c2 208
 #define block_tiles_palette_1c3 167
 
-extern unsigned char block_tiles[];
+#define block_tiles_size 9
+
+extern const unsigned char block_tiles[ block_tiles_size * 16 ];

@@ -26,5 +26,11 @@ $(OBJDIR):
 $(BINDIR):
 	mkdir -p $(BINDIR)
 
+run: $(BINDIR)/gbc0.gb
+	rm -rf /mnt/c/gbc
+	mkdir -p /mnt/c/gbc
+	cp $(BINDIR)/gbc0.gb /mnt/c/gbc/gbc0.gb
+	/mnt/c/Program\ Files/mGBA/mGBA.exe "C:\\gbc\\gbc0.gb"
+
 clean:
 	rm -rf $(OBJDIR) $(BINDIR)

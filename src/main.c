@@ -3,18 +3,24 @@
 #include <stdio.h>
 #include "block_tiles.h"
 
-unsigned int bg_palette0[4] = {
-    block_tiles_palette_0c0,
-    block_tiles_palette_0c1,
-    block_tiles_palette_0c2,
-    block_tiles_palette_0c3
+const unsigned int bg_palette0[4] = {
+  block_tiles_palette_0c0,
+  block_tiles_palette_0c1,
+  block_tiles_palette_0c2,
+  block_tiles_palette_0c3
 };
 
-unsigned int bg_palette1[4] = {
-    block_tiles_palette_1c0,
-    block_tiles_palette_1c1,
-    block_tiles_palette_1c2,
-    block_tiles_palette_1c3
+const unsigned int bg_palette1[4] = {
+  block_tiles_palette_1c0,
+  block_tiles_palette_1c1,
+  block_tiles_palette_1c2,
+  block_tiles_palette_1c3
+};
+
+const unsigned char tilemap[] = {
+  1, 2, 3, 4, 5,
+  6, 7, 8, 0, 1,
+  2, 3, 4, 5, 6
 };
 
 void main(void) {
@@ -30,20 +36,16 @@ void main(void) {
     BGP_REG = 0xE4;
   }
 
-  // Load 9 tiles starting at index 0
-  set_bkg_data(0, 9, block_tiles);
+  set_bkg_data(0, block_tiles_size, block_tiles);
 
-  // Create a simple tilemap to display some tiles
-  unsigned char tilemap[] = {
-      1, 2, 3, 4, 5,
-      6, 7, 8, 0, 1,
-      2, 3, 4, 5, 6
-  };
+  // Set the tilemap on background; 5x3 tile area starting at (0,1)
+  set_bkg_tiles(0, 1, 5, 3, tilemap);
 
-  // 5. Set the tilemap on background
-  set_bkg_tiles(0, 1, 5, 3, tilemap); // 5x3 tile area starting at (0,1)
+  uint8_t i = 0;
 
   while(1) {
+    if (++i % 8 == 0)
+      SCY_REG++;
     wait_vbl_done();
   }
 }
