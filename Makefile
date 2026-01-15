@@ -17,7 +17,6 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(LCC) -c -o $@ $<
 
 $(BINDIR)/gbc0.gb: $(OBJS) | $(BINDIR)
-	rm -f $(BINDIR)/*.sav $(BINDIR)/*.ss*
 	$(LCC) -Wm-yc -o $@ $(OBJS)
 
 $(OBJDIR):
@@ -27,10 +26,7 @@ $(BINDIR):
 	mkdir -p $(BINDIR)
 
 run: $(BINDIR)/gbc0.gb
-	rm -rf /mnt/c/gbc
-	mkdir -p /mnt/c/gbc
-	cp $(BINDIR)/gbc0.gb /mnt/c/gbc/gbc0.gb
-	/mnt/c/Program\ Files/mGBA/mGBA.exe "C:\\gbc\\gbc0.gb"
+	./assets/bgb/bgb.exe $(BINDIR)/gbc0.gb
 
 clean:
 	rm -rf $(OBJDIR) $(BINDIR)
