@@ -4,7 +4,8 @@
 #include "block_tiles.h"
 #include "grid.h"
 #include "rand.h"
-#include "grid_tilemap.h"
+#include "renderer.h"
+#include "test.h"
 
 const uint16_t bg_palette0[4] = {
   block_tiles_palette_0c0,
@@ -21,7 +22,7 @@ const uint16_t bg_palette1[4] = {
 };
 
 void main(void) {
-  puts("Hello world");
+  printf("Hello world\n");
 
   DISPLAY_ON;
   SHOW_BKG;
@@ -44,18 +45,22 @@ void main(void) {
 
   set_bkg_data(0, block_tiles_size, block_tiles);
 
-  uint8_t i = 0;
+  if (!test_main()) {
+    vsync();
+    return;
+  }
 
   grid_init(5);
-  grid_random_fill(grid_width * 4);
-  grid_tilemap_render();
+  // grid_random_fill(grid_width * 4);
+  // grid_tilemap_render();
 
+  uint8_t i = 0;
   while(1) {
     vsync();
 
-    if (++i % 16 == 0)
-      grid_shift_pixel();
-    grid_tilemap_render();
-    grid_last_row_fill();
+    // if (++i % 16 == 0)
+    //   grid_shift_pixel();
+    // renderer_render();
+    // grid_last_row_fill();
   }
 }
