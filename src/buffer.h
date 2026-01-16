@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #define buffer_height 32
-#define buffer_width 8
+#define buffer_width 6
 #define buffer_size (buffer_height * buffer_width)
 #define buffer_screen_height 18
 

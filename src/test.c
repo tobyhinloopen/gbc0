@@ -3,11 +3,13 @@
 #include <stdio.h>
 
 #include "grid_test.h"
+#include "rand_test.h"
 
 int tests_run = 0;
 
 char *all_tests(void) {
   mu_run_suite(grid_test);
+  mu_run_suite(rand_test);
 
   return 0;
 }

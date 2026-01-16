@@ -11,9 +11,11 @@ BINDIR = bin
 CSOURCES = $(wildcard $(SRCDIR)/*.c)
 OBJS = $(CSOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
+HEADERS = $(wildcard $(SRCDIR)/*.h)
+
 all: $(BINDIR)/gbc0.gb
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(HEADERS) | $(OBJDIR)
 	$(LCC) -c -o $@ $<
 
 $(BINDIR)/gbc0.gb: $(OBJS) | $(BINDIR)
@@ -34,3 +36,5 @@ endif
 
 clean:
 	rm -rf $(OBJDIR) $(BINDIR)
+
+.PHONY: all run clean

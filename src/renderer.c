@@ -5,7 +5,7 @@
 #include <gb/cgb.h>
 
 void renderer_render(void) {
-  SCY_REG = 0; // grid_tile_pixel_offset_y - grid_pixel_height;
+  // SCY_REG = 0; // grid_tile_pixel_offset_y - grid_pixel_height;
 
-  set_bkg_tiles(grid_tilemap_x, grid_tilemap_y, buffer_width, buffer_height, buffer_tiles);
+  set_bkg_tiles(renderer_x, renderer_y, buffer_width, buffer_height, buffer_tiles);
 }

@@ -45,22 +45,21 @@ void main(void) {
 
   set_bkg_data(0, block_tiles_size, block_tiles);
 
-  if (!test_main()) {
+  if (test_main()) {
     vsync();
     return;
   }
 
   grid_init(5);
-  // grid_random_fill(grid_width * 4);
-  // grid_tilemap_render();
+  grid_random_fill(grid_width * 4);
+  renderer_render();
 
   uint8_t i = 0;
   while(1) {
     vsync();
 
-    // if (++i % 16 == 0)
-    //   grid_shift_pixel();
-    // renderer_render();
-    // grid_last_row_fill();
+    if (++i % 16 == 0)
+      SCY_REG++;
+    renderer_render();
   }
 }

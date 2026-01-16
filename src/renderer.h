@@ -2,7 +2,7 @@
 
 #include "grid.h"
 
-#define grid_tilemap_x 2
-#define grid_tilemap_y -2
+#define renderer_x 0
+#define renderer_y 0
 
-void grid_tilemap_render(void);
+void renderer_render(void);
