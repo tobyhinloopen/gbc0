@@ -26,7 +26,11 @@ $(BINDIR):
 	mkdir -p $(BINDIR)
 
 run: $(BINDIR)/gbc0.gb
+ifeq ($(shell uname),Darwin)
+	./assets/sameboy/SameBoy.app/Contents/MacOS/SameBoy $(BINDIR)/gbc0.gb
+else
 	./assets/bgb/bgb.exe $(BINDIR)/gbc0.gb
+endif
 
 clean:
 	rm -rf $(OBJDIR) $(BINDIR)
