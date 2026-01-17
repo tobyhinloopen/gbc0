@@ -6,6 +6,7 @@
 #include "rand_test.h"
 
 int tests_run = 0;
+char _ferror_buffer[256];
 
 char *all_tests(void) {
   mu_run_suite(grid_test);

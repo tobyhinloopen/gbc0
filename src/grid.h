@@ -4,34 +4,35 @@
 #include <stdbool.h>
 
 #define grid_width 6
+#define grid_height 32
+#define grid_playable_min_y 1
+#define grid_playable_max_y 17
 
-// The number of distinct normal tiles, usually 5 or 6
-extern uint8_t grid_tile_id_count;
+typedef struct {
+  uint8_t blocks[grid_width];
+  uint8_t flags0;
+  uint8_t flags1;
+} grid_row_t;
 
-// The min-y coordinate of the playable grid, basically the ceiling.
-// Game-Over if grid is raised when anything is touching the ceiling.
-// This is also the ceiling of the interactable tiles. If min_y is greater than
-// max_y, it loops over buffer_height.
-//
-// It is implemented as a pointer to buffer on x=0 y=grid_min_y
-extern uint8_t *grid_min_y_ptr;
+extern grid_row_t grid_rows[grid_height];
+extern uint8_t grid_column_heights[grid_width];
 
-// The max-y coordinate of the playable grid, basically the floor of
-// interactable tiles.
-// If min_y is greater than max_y, it loops over buffer_height.
-//
-// It is implemented as a pointer to buffer on x=0 y=grid_max_y
-extern uint8_t *grid_max_y_ptr;
+// The number of distinct normal blocks, usually 5 or 6
+extern uint8_t grid_block_id_count;
 
 // Clears the grid & set a tile id count.
-void grid_init(uint8_t tile_id_count);
+void grid_init(uint8_t block_id_count);
 
-// Generates n random normal tiles from bottom to top, making sure no existing
-// matches. Returns amount of blocks remaining, should be 0.
-int grid_random_fill(uint8_t n);
+// Generates n random normal blocks from bottom to top, making sure no existing
+// matches. Returns amount of blocks remaining, should be 0. Starts at playable
+// area.
+uint8_t grid_random_fill(uint8_t n);
 
-// void grid_set(uint8_t i, uint8_t tile_id);
-// void grid_set_xy(uint8_t x, uint8_t y, uint8_t tile_id);
+// Count number of interactable blocks in playable area
+uint8_t grid_count_playable_blocks(void);
+
+// void grid_set(uint8_t i, uint8_t block_id);
+// void grid_set_xy(uint8_t x, uint8_t y, uint8_t block_id);
 // void grid_random_fill_row(uint8_t y);
 // void grid_shift_pixel(void);
 // void grid_shift_tile(void);
