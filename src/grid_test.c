@@ -44,7 +44,7 @@ char *grid_test(void) {
   mu_run_test(test_grid_random_fill);
 
   mu_run_bench("grid_init", bench_grid_init);
-  mu_run_bench("g_random_fill", bench_grid_random_fill);
+  mu_run_bench("grid_random_fill", bench_grid_random_fill);
 
   return 0;
 }
