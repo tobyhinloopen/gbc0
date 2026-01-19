@@ -5,6 +5,25 @@
 #include "rand.h"
 #include "renderer.h"
 #include "test.h"
+#include "font.h"
+#include "font_data.h"
+#include <string.h>
+
+static uint8_t tile_data[752];
+static uint8_t len = 94;
+
+static void render_font_characters(void) {
+  memset(tile_data, 0, sizeof(tile_data));
+
+  for (uint8_t i = 0; i < len; i++)
+    font_render_character_1bpp(&tile_data[i * 8], 0, 0, font_data_ascii_offset + i);
+  set_bkg_1bpp_data(1, len, tile_data);
+
+  for (uint8_t y = 0; y < 8; y++)
+    for (uint8_t x = 0; x < 12; x++)
+      if (y * 12 + x < len)
+        set_bkg_tile_xy(x + 1, y + 1, 1 + y * 12 + x);
+}
 
 const uint16_t bg_palette0[4] = { 0x7FFF, 0x001F, 0x03E0, 0x7C00 };
 const uint16_t bg_palette1[4] = { 0x001F, 0x7FFF, 0x03E0, 0x7C00 };
@@ -43,10 +62,14 @@ void main(void) {
   //   set_bkg_tile_xy(i, 0, i);
   // VBK_REG = VBK_TILES;
 
-  if (test_main()) {
-    vsync();
-    return;
-  }
+  // if (test_main()) {
+  //   vsync();
+  //   return;
+  // }
+
+  render_font_characters();
+  vsync();
+  return;
 
   grid_init(5);
   grid_random_fill(grid_width * 4);

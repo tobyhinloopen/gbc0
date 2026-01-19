@@ -15,7 +15,7 @@ void grid_init(uint8_t block_id_count) {
 }
 
 void grid_random_fill_row(uint8_t r) {
-
+  (void)r;
 }
 
 uint8_t grid_random_fill(uint8_t c) {

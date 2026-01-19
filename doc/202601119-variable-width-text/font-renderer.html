@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<canvas id="font-data-canvas"></canvas>
+<img id="font-data-image"></img>
+<pre id="font-data-target"></pre>
+<style>
+* {
+  image-rendering: pixelated;
+}
+</style>
+<script>
+  const fontPath = "./pixel-millennium-1oBZ.ttf";
+  /** @type {HTMLCanvasElement} */
+  const canvas = document.getElementById("font-data-canvas");
+  const image = document.getElementById("font-data-image");
+  const fontDataTarget = document.getElementById("font-data-target");
+  const ctx = canvas.getContext("2d", { alpha: false });
+  const pixelStride = 8;
+  const scale = 16;
+  const scaledPixelStride = pixelStride * scale;
+  const rowSize = 12;
+  const charCount = 94;
+  const asciiOffset = 33;
+  const rowCount = Math.ceil(charCount / rowSize);
+  const skipCharacters = "@";
+  const characters = [];
+
+  async function main() {
+    const font = new FontFace('pixel-font', `url(${fontPath})`);
+    await font.load();
+    document.fonts.add(font);
+
+    ctx.imageSmoothingEnabled = false;
+    ctx.fontKerning = "none"
+    canvas.width = scaledPixelStride * rowSize;
+    canvas.height = scaledPixelStride * rowCount;
+
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgb(0, 0, 255)';
+    ctx.imageSmoothingEnabled = false;
+
+    ctx.font = scaledPixelStride + 'px pixel-font';
+    ctx.translate(0.5, 0.5);
+
+    for (let x = 0; x < rowSize; x++) {
+      for (let y = 0; y < rowCount; y++) {
+        const i = y * rowSize + x;
+        if (i >= charCount) continue;
+        const str = String.fromCharCode(asciiOffset + i);
+        const skip = skipCharacters.includes(str);
+        if (!skip)
+          ctx.fillText(str, x * scaledPixelStride, y * scaledPixelStride + scaledPixelStride * 0.75);
+        characters[i] = { str, x, y, skip };
+      }
+    }
+
+    {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(canvas, 0, 0, canvas.width / scale, canvas.height / scale);
+      const imageData = ctx.getImageData(0, 0, canvas.width / scale, canvas.height / scale);
+      canvas.width /= scale;
+      canvas.height /= scale;
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    image.src = canvas.toDataURL("png");
+
+    const metadataSize = 9;
+
+    for (const char of characters) {
+      const imageData = ctx.getImageData(char.x * pixelStride, char.y * pixelStride, pixelStride, pixelStride);
+
+      let blank = true;
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      const bytes8x8 = new Uint8Array(8);
+      bytes8x8.fill(0);
+      for (let y = 0; y < pixelStride; y++) {
+        const row = [];
+        for (let x = 0; x < pixelStride; x++) {
+          const index = y * pixelStride + x;
+          const high = imageData.data[index * 4] < 127;
+
+          if (!high) continue;
+
+          bytes8x8[y] |= (1 << x);
+          blank = false;
+          minX = Math.min(x, minX);
+          maxX = Math.max(x, maxX);
+          minY = Math.min(y, minY);
+          maxY = Math.max(y, maxY);
+        }
+      }
+
+      char.blank = blank;
+      char.minX = minX;
+      char.maxX = maxX;
+      char.minY = minY;
+      char.maxY = maxY;
+      char.bytes8x8 = bytes8x8;
+      char.width = maxX - minX + 1;
+      char.offset = minY;
+      char.height = maxY - minY + 1;
+      char.size = char.width * char.height;
+    }
+
+    let totalByteSize = 1;
+    for (const char of characters) {
+      if (char.skip) continue;
+      const bitSize = metadataSize + char.size;
+      const byteSize = Math.ceil(bitSize / 8);
+      totalByteSize += byteSize;
+      const bytes = new Uint8Array(byteSize);
+
+      // write width as 3 bits (bits 0-2)
+      bytes[0] |= (char.width & 0x07);
+
+      // write height as 3 bits (bits 3-5)
+      bytes[0] |= ((char.height & 0x07) << 3);
+
+      // write offset as 3 bits (bits 6-8, spanning bytes[0] and bytes[1])
+      bytes[0] |= ((char.offset & 0x03) << 6);
+      bytes[1] |= ((char.offset & 0x04) >> 2);
+
+      // extract minX/maxY/minY/maxY region from bytes8x8, write into bytes
+      let bitIndex = metadataSize; // Start after the 9 metadata bits
+
+      for (let y = char.minY; y <= char.maxY; y++) {
+        for (let x = char.minX; x <= char.maxX; x++) {
+          // Check if this pixel is set in the original 8x8 data
+          const high = (char.bytes8x8[y] & (1 << x)) !== 0;
+
+          if (high) {
+            const byteIndex = Math.floor(bitIndex / 8);
+            const bitOffset = bitIndex % 8;
+            bytes[byteIndex] |= (1 << bitOffset);
+          }
+
+          bitIndex++;
+        }
+      }
+
+      char.packedBytes = bytes;
+      char.byteSize = byteSize;
+    }
+
+    let fontData = `const uint8_t font_data[${totalByteSize}] = {\n`;
+    let fontIndices = `const uint16_t font_data_indices[${charCount}] = {\n`;
+
+    fontData += `  /* <blank> */ 0x00,\n`;
+    let nextIndex = 1;
+
+    for (let i = 0; i < characters.length; i++) {
+      const char = characters[i];
+
+      if (char.skip) {
+        fontIndices += `  /* ${char.str} */ 0,\n`;
+        continue;
+      }
+
+      fontData += `  /* ${char.str} */ `;
+      fontData += [...char.packedBytes].join(", ") + ",\n";
+
+      fontIndices += `  /* ${char.str} */ ${nextIndex},\n`;
+      nextIndex += char.byteSize;
+    }
+
+    fontData += "};";
+    fontIndices += "};";
+
+    const source = `// font_data.h\n\n`
+     + `#pragma once\n\n`
+     + `#include <stdint.h>\n\n`
+     + `#define font_data_ascii_offset ${asciiOffset}\n`
+     + `#define font_data_ascii_max ${asciiOffset + charCount - 1}\n\n`
+     + `extern const uint8_t font_data[${totalByteSize}];\n`
+     + `extern const uint16_t font_data_indices[${charCount}];`
+     + `\n\n// font_data.c\n\n`
+     + `#include "font_data.h"\n\n`
+     + `${fontData}\n\n${fontIndices}\n\n`;
+
+    console.log(source);
+    fontDataTarget.textContent = source;
+  }
+
+  main();
+</script>
