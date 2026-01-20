@@ -9,20 +9,53 @@
 #include "font_data.h"
 #include <string.h>
 
-static uint8_t tile_data[752];
-static uint8_t len = 94;
+#define _tile_size 8
+#define _char_count 94
+
+static uint8_t tile_data[_tile_size * _char_count];
 
 static void render_font_characters(void) {
   memset(tile_data, 0, sizeof(tile_data));
 
-  for (uint8_t i = 0; i < len; i++)
-    font_render_character_1bpp(&tile_data[i * 8], 0, 0, font_data_ascii_offset + i);
-  set_bkg_1bpp_data(1, len, tile_data);
+  for (uint8_t i = 0; i < _char_count; i++)
+    font_render_character_1bpp(&tile_data[i * _tile_size], 0, 0, font_data_ascii_offset + i);
+  set_bkg_1bpp_data(1, _char_count, tile_data);
 
   for (uint8_t y = 0; y < 8; y++)
     for (uint8_t x = 0; x < 12; x++)
-      if (y * 12 + x < len)
+      if (y * 12 + x < _char_count)
         set_bkg_tile_xy(x + 1, y + 1, 1 + y * 12 + x);
+}
+
+static void render_line(const char *text) {
+  uint8_t text_tile_data[_tile_size * 20];
+  memset(text_tile_data, 0, sizeof(text_tile_data));
+  size_t len = strlen(text);
+
+  uint16_t x = 0;
+  for (size_t i = 0; i < len; i++) {
+    char c = text[i];
+    if (c == ' ') {
+      x+=2;
+      continue;
+    }
+    uint16_t tile_x = x / _tile_size;
+    int8_t offset_x = x % _tile_size;
+    int8_t w = font_render_character_1bpp(&text_tile_data[tile_x * _tile_size], offset_x, 0, c);
+
+    if (offset_x + w > 8) {
+      offset_x -= 8;
+      tile_x++;
+      font_render_character_1bpp(&text_tile_data[tile_x * _tile_size], offset_x, 0, c);
+    }
+
+    x += w + 1;
+  }
+
+  set_bkg_1bpp_data(100, 20, text_tile_data);
+
+  for (uint8_t i = 0; i < 20; i++)
+    set_bkg_tile_xy(i, 10, 100 + i);
 }
 
 const uint16_t bg_palette0[4] = { 0x7FFF, 0x001F, 0x03E0, 0x7C00 };
@@ -68,6 +101,7 @@ void main(void) {
   // }
 
   render_font_characters();
+  render_line(" Hello, world!! This is a variable-width string!");
   vsync();
   return;
 
