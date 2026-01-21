@@ -386,22 +386,46 @@ Let's write some tests for this function:
 
 **font_test.c**
 ```c
-static const uint8_t tile_data_length = 4;
+#define tile_data_length 4
 static uint8_t tile_data[tile_data_length * 8];
-
 static char *test_font_render_line_1bpp_simple(void) {
   memset(tile_data, 0, sizeof(tile_data));
-  font_render_line_result_t result = font_render_line_1bpp(tile_data, tile_data_length, 0, 0, "Hi");
+  font_render_line_result_t result =
+    font_render_line_1bpp(tile_data, tile_data_length, 0, 0, "Hi");
 
-  uint8_t expected_pixels = font_get_character_width('H') + font_letter_spacing + font_get_character_width('i');
+  // Note: I've created this font_get_line_width function as well,
+  // but that's outside the scope of this blog to keep it brief.
+  uint8_t expected_pixels = font_get_line_width("Hi");
+  uint8_t expected_tiles = (expected_pixels + 7) / 8;
 
   mu_assert_eq(*result.remainder, '\0', "%c");
   mu_assert_eq(result.pixel_count, expected_pixels, "%d");
-  mu_assert_eq(result.tile_count, 1, "%d");
+  mu_assert_eq(result.tile_count, expected_tiles, "%d");
+
+  return 0;
+}
+
+static char *test_font_render_line_1bpp_too_long(void) {
+  const char *text = "This is a long string!";
+  memset(tile_data, 0, sizeof(tile_data));
+  font_render_line_result_t result =
+    font_render_line_1bpp(tile_data, tile_data_length, 0, 0, text);
+
+  // because the tile_data is too short to fit the string, the remainder should
+  // point to a non-NULL character
+  mu_assert(*result.remainder != '\0');
+
+  // The remainer should also be greater than the start of the text
+  mu_assert(result.remainder > text);
+
+  mu_assert_eq(result.tile_count, tile_data_length, "%d");
+  mu_assert(result.pixel_count <= tile_data_length * 8);
 
   return 0;
 }
 ```
+
+Now to implement them.
 
 **font.c**
 ```c
@@ -449,7 +473,8 @@ font_render_line_result_t font_render_line_1bpp(
 
   font_render_line_result_t result;
   result.remainder = current_char;
-  result.pixel_count = rendered_width > 0 ? rendered_width - font_letter_spacing : 0;
+  result.pixel_count = rendered_width > 0
+    ? rendered_width - font_letter_spacing : 0;
   result.tile_count = (uint8_t)((x + 7) / 8);
 
   return result;
@@ -459,10 +484,17 @@ font_render_line_result_t font_render_line_1bpp(
 **main.c**
 ```c
 static void render_line(const char *text) {
+  // create and clear a buffer for 20 1bpp tiles
   uint8_t text_tile_data[_tile_size * 20];
   memset(text_tile_data, 0, sizeof(text_tile_data));
+
+  // render the characters into 20 tiles, starting at x=4, y=0
   font_render_line_1bpp(text_tile_data, 20, 4, 0, text);
+
+  // upload the 20 tiles to VRAM at id=100
   set_bkg_1bpp_data(100, 20, text_tile_data);
+
+  // render the VRAM tiles id=100-120 at x=0-20, y=10 on the background
   for (uint8_t i = 0; i < 20; i++)
     set_bkg_tile_xy(i, 10, 100 + i);
 }
@@ -473,3 +505,7 @@ void main(void) {
 ```
 
 <img src="./202601119-variable-width-text/font-on-screen-02.png" width="320" height="288" style="image-rendering: pixelated;">
+
+It works!
+
+There's lots of room for optimization and rendering of new-lines, but that's outside the scope of this already lengthy blog. Thanks for reading!

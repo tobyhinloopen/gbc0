@@ -40,7 +40,7 @@ static char *test_font_render_line_1bpp_simple(void) {
   memset(tile_data, 0, sizeof(tile_data));
   font_render_line_result_t result = font_render_line_1bpp(tile_data, tile_data_length, 0, 0, "Hi");
 
-  uint8_t expected_pixels = font_get_character_width('H') + font_letter_spacing + font_get_character_width('i');
+  uint8_t expected_pixels = font_get_line_width("Hi");
   uint8_t expected_tiles = (expected_pixels + 7) / 8;
 
   mu_assert_eq(*result.remainder, '\0', "%c");
@@ -51,10 +51,26 @@ static char *test_font_render_line_1bpp_simple(void) {
 }
 
 static char *test_font_render_line_1bpp_too_long(void) {
-  // memset(tile_data, 0, sizeof(tile_data));
-  // font_render_line_result_t result = font_render_line_1bpp(tile_data, tile_data_length, 0, 0, "This is a long string!");
+  const char *text = "This is a long string!";
+  memset(tile_data, 0, sizeof(tile_data));
+  font_render_line_result_t result = font_render_line_1bpp(tile_data, tile_data_length, 0, 0, text);
 
-  // assert the remainer, pixel count and tile count
+  mu_assert(*result.remainder != '\0');
+  mu_assert(result.remainder > text);
+  mu_assert_eq(result.tile_count, tile_data_length, "%d");
+  mu_assert(result.pixel_count <= tile_data_length * 8);
+
+  return 0;
+}
+
+static char *test_font_get_line_width(void) {
+  mu_assert_eq(font_get_line_width(""), 0, "%d");
+
+  uint8_t expected = font_get_character_width('H') + font_letter_spacing + font_get_character_width('i');
+  mu_assert_eq(font_get_line_width("Hi"), expected, "%d");
+  mu_assert_eq(font_get_line_width("Hi\nWorld"), expected, "%d");
+
+  return 0;
 }
 
 char *font_test(void) {
@@ -62,5 +78,6 @@ char *font_test(void) {
   mu_run_test(test_font_render_character_1bpp_known_character);
   mu_run_test(test_font_render_line_1bpp_simple);
   mu_run_test(test_font_render_line_1bpp_too_long);
+  mu_run_test(test_font_get_line_width);
   return 0;
 }

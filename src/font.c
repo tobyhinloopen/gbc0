@@ -14,6 +14,17 @@ uint8_t font_get_character_width(char c) {
   return font_data[i] & 0x07;
 }
 
+uint8_t font_get_line_width(const char *string) {
+  uint8_t width = 0;
+  while (*string && *string != '\n') {
+    uint8_t w = font_get_character_width(*string);
+    if (w > 0)
+      width += w + font_letter_spacing;
+    string++;
+  }
+  return width > 0 ? width - font_letter_spacing : 0;
+}
+
 uint8_t font_render_character_1bpp(uint8_t *tile, int8_t dx, int8_t dy, char c) {
   if (c < font_data_ascii_offset
   || c > font_data_ascii_max)
