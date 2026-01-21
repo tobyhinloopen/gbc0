@@ -22,7 +22,7 @@ I like [Pixel Millennium](https://www.fontspace.com/pixel-millennium-font-f14020
 
 The next step is to convert the TTF to a map of characters I can use as a basis to render the text width. My instinct tells me to render the characters as a 1-bit bitmap, where each byte represents 8 pixels of either "background color" (0, for white) and "text color" (1, for black).
 
-My bitmap should also contain the width and height of a character. I intend to use the same height for all characters, so I only need to store the width of a character, using a global "height" constant for the height for all characters.
+My bitmap should also contain the width, height and y-offset of each character.
 
 I haven't actually checked, but I assume the smallest character is 1 pixel wide and the largest character is 5 pixels wide, so I need at least 3 bits to encode the width of a character. 3 bits nicely encodes 0 up to 7, which I expect to cover all characters.
 
@@ -58,7 +58,7 @@ First, I render the characters to a canvas. For some reason the font keeps rende
 
 ![Characters](./202601119-variable-width-text/characters-01.png)
 
-By rendering these characters, I immediately notice the characters not only have a variable height, they also have a variable vertical position. My plan to encode the characters with a fixed height of 5 will fail anyway since some characters are clarly taller than that, with the `$` being 7 pixels tall while the `.` (period) is 1 pixel tall. The underscore, `_` starts at the very bottom and the `'` starts at the very top. The `@` is not supported by the font, so I'm going to keep that character blank for now.
+By rendering these characters, I immediately notice the characters not only have a variable height, they also have a variable vertical position. My plan to encode the characters with a fixed height of 5 will fail anyway since some characters are clearly taller than that, with the `$` being 7 pixels tall while the `.` (period) is 1 pixel tall. The underscore, `_` starts at the very bottom and the `'` starts at the very top. The `@` is not supported by the font, so I'm going to keep that character blank for now.
 
 To support a variable width, height and vertical offset, I'm going to encode the width, height and vertical offset of each character. Analyzing all characters, I found that the width, height and vertical offsets all vary by at least 5, I'm going to need at least 3 bits for each value, 9 bits total. I might still pack them as 1 byte per value, depending on the size vs performance tradeoff, since extracting 3 bits from a byte is likely extra work.
 
@@ -138,7 +138,7 @@ uint8_t * set_bkg_tile_xy(uint8_t x, uint8_t y, uint8_t t);
 
 Let's define `font_render_character_1bpp`, returning 0, which is the minimum definition that compiles. I am going to implement this using Test-Driven-Development:
 
-**font.c*
+**font.c**
 ```c
 #include "font.h"
 #include "font_data.h"
@@ -415,7 +415,7 @@ static char *test_font_render_line_1bpp_too_long(void) {
   // point to a non-NULL character
   mu_assert(*result.remainder != '\0');
 
-  // The remainer should also be greater than the start of the text
+  // The remainder should also be greater than the start of the text
   mu_assert(result.remainder > text);
 
   mu_assert_eq(result.tile_count, tile_data_length, "%d");
