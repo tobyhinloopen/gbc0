@@ -3,12 +3,14 @@
 
 #include <stdio.h>
 
+static const uint8_t width_mask_lut[8] = {0, 1, 3, 7, 15, 31, 63, 127};
+
 #define FONT_RENDER_LOOP(char_data, width, dy, ROW_HANDLER)                   \
   do {                                                                        \
     uint8_t height = FONT_DATA_HEIGHT(char_data);                             \
     dy += FONT_DATA_VERTICAL_OFFSET(char_data);                               \
     uint8_t bit_index = 9;                                                    \
-    uint8_t width_mask = (1 << width) - 1;                                    \
+    uint8_t width_mask = width_mask_lut[width];                               \
     for (uint8_t y = 0; y < height; y++, bit_index += width) {                \
       int8_t py = dy + (int8_t)y;                                             \
       if (py < 0 || py >= 8)                                                  \
