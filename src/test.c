@@ -4,10 +4,8 @@
 
 #include "font_test.h"
 #include "grid_test.h"
+#include "minunit.h"
 #include "rand_test.h"
-
-int tests_run = 0;
-char _ferror_buffer[256];
 
 char *all_tests(void) {
   mu_run_suite(font_test);
@@ -18,13 +16,14 @@ char *all_tests(void) {
 }
 
 int test_main(void) {
+  mu_init();
   char *result = all_tests();
   if (result != 0) {
     printf("%s\n", result);
   } else {
     printf("ALL TESTS PASSED\n");
   }
-  printf("Tests run: %d\n", tests_run);
+  printf("Tests run: %d\n", mu_tests_run);
 
   return result != 0;
 }

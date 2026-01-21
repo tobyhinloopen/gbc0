@@ -4,8 +4,12 @@
 #include "font_data.h"
 #include <string.h>
 
-#define tile_data_length 4
+#define tile_data_length 20
 static uint8_t tile_data[tile_data_length * 8];
+
+static void reset_tile_data(void) {
+  memset(tile_data, 0, sizeof(tile_data));
+}
 
 static uint8_t render(char c) {
   return font_render_character_1bpp(tile_data, 0, 0, c);
@@ -19,10 +23,12 @@ static char *test_font_render_character_1bpp_missing_character(void) {
   return 0;
 }
 
-static char *test_font_render_character_1bpp_known_character(void) {
+static char *test_font_render_character_1bpp_known_width(void) {
   mu_assert_eq(render('!'), 1, "%d"); // Known 1-pixel wide
+  return 0;
+}
 
-  memset(tile_data, 0, sizeof(tile_data));
+static char *test_font_render_character_1bpp_known_data(void) {
   mu_assert_eq(render('#'), 5, "%d"); // Known 5-pixel wide
   mu_assert_eq(tile_data[0], 0b00000000, "%d");
   mu_assert_eq(tile_data[1], 0b01010000, "%d");
@@ -32,12 +38,10 @@ static char *test_font_render_character_1bpp_known_character(void) {
   mu_assert_eq(tile_data[5], 0b01010000, "%d");
   mu_assert_eq(tile_data[6], 0b00000000, "%d");
   mu_assert_eq(tile_data[7], 0b00000000, "%d");
-
   return 0;
 }
 
 static char *test_font_render_line_1bpp_simple(void) {
-  memset(tile_data, 0, sizeof(tile_data));
   font_render_line_result_t result = font_render_line_1bpp(tile_data, tile_data_length, 0, 0, "Hi");
 
   uint8_t expected_pixels = font_get_line_width("Hi");
@@ -51,14 +55,14 @@ static char *test_font_render_line_1bpp_simple(void) {
 }
 
 static char *test_font_render_line_1bpp_too_long(void) {
+  const uint8_t short_length = 4;
   const char *text = "This is a long string!";
-  memset(tile_data, 0, sizeof(tile_data));
-  font_render_line_result_t result = font_render_line_1bpp(tile_data, tile_data_length, 0, 0, text);
+  font_render_line_result_t result = font_render_line_1bpp(tile_data, short_length, 0, 0, text);
 
   mu_assert(*result.remainder != '\0');
   mu_assert(result.remainder > text);
-  mu_assert_eq(result.tile_count, tile_data_length, "%d");
-  mu_assert(result.pixel_count <= tile_data_length * 8);
+  mu_assert_eq(result.tile_count, short_length, "%d");
+  mu_assert(result.pixel_count <= short_length * 8);
 
   return 0;
 }
@@ -73,11 +77,25 @@ static char *test_font_get_line_width(void) {
   return 0;
 }
 
+static char *bench_font_render_character_1bpp(void) {
+  font_render_character_1bpp(tile_data, 0, 0, 'W');
+  return 0;
+}
+
+static char *bench_font_render_line_1bpp(void) {
+  font_render_line_1bpp(tile_data, tile_data_length, 0, 0, "Hello, world!");
+  return 0;
+}
+
 char *font_test(void) {
+  mu_before_each = reset_tile_data;
   mu_run_test(test_font_render_character_1bpp_missing_character);
-  mu_run_test(test_font_render_character_1bpp_known_character);
+  mu_run_test(test_font_render_character_1bpp_known_width);
+  mu_run_test(test_font_render_character_1bpp_known_data);
   mu_run_test(test_font_render_line_1bpp_simple);
   mu_run_test(test_font_render_line_1bpp_too_long);
   mu_run_test(test_font_get_line_width);
+  mu_run_bench("render_char", bench_font_render_character_1bpp);
+  mu_run_bench("render_line", bench_font_render_line_1bpp);
   return 0;
 }
