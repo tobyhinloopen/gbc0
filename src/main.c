@@ -30,30 +30,8 @@ static void render_font_characters(void) {
 static void render_line(const char *text) {
   uint8_t text_tile_data[_tile_size * 20];
   memset(text_tile_data, 0, sizeof(text_tile_data));
-  size_t len = strlen(text);
-
-  uint16_t x = 0;
-  for (size_t i = 0; i < len; i++) {
-    char c = text[i];
-    if (c == ' ') {
-      x+=2;
-      continue;
-    }
-    uint16_t tile_x = x / _tile_size;
-    int8_t offset_x = x % _tile_size;
-    int8_t w = font_render_character_1bpp(&text_tile_data[tile_x * _tile_size], offset_x, 0, c);
-
-    if (offset_x + w > 8) {
-      offset_x -= 8;
-      tile_x++;
-      font_render_character_1bpp(&text_tile_data[tile_x * _tile_size], offset_x, 0, c);
-    }
-
-    x += w + 1;
-  }
-
+  font_render_line_1bpp(text_tile_data, 20, 4, 0, text);
   set_bkg_1bpp_data(100, 20, text_tile_data);
-
   for (uint8_t i = 0; i < 20; i++)
     set_bkg_tile_xy(i, 10, 100 + i);
 }
@@ -101,7 +79,7 @@ void main(void) {
   // }
 
   render_font_characters();
-  render_line(" Hello, world!! This is a variable-width string!");
+  render_line("Hello, world!! This is a variable-width string!");
   vsync();
   return;
 

@@ -120,10 +120,7 @@ Let's attempt to write the characters as tiles on a gameboy, rendering one chara
 #include <gb/gb.h>
 #include <stdint.h>
 
-// Render a character into a 1bpp tile buffer at a given destination in pixels,
-// relative to top/left of the tile. Writes into 1 or 2 tiles in `tile`.
-// The width of the character is returned, or `0` if nothing was rendered.
-uint8_t font_render_character_1bpp(uint8_t *tile, uint8_t dx, uint8_t dy, char c);
+uint8_t font_render_character_1bpp(uint8_t *tile, int8_t dx, int8_t dy, char c);
 ```
 
 With 1bpp, one can use the following GBDK functions to render the character:
@@ -327,26 +324,129 @@ This implementation is obviously not efficient, but the test does pass. Now to a
 #include "font_data.h"
 #include <string.h>
 
-static uint8_t tile_data[752];
-static uint8_t len = 94;
+#define _tile_size 8
+#define _char_count 94
+
+static uint8_t tile_data[_tile_size * _char_count];
 
 static void render_font_characters(void) {
   memset(tile_data, 0, sizeof(tile_data));
 
-  for (uint8_t i = 0; i < len; i++)
-    font_render_character_1bpp(&tile_data[i * 8], 0, 0,
+  for (uint8_t i = 0; i < _char_count; i++)
+    font_render_character_1bpp(&tile_data[i * _tile_size], 0, 0,
       font_data_ascii_offset + i);
-  set_bkg_1bpp_data(1, len, tile_data);
+  set_bkg_1bpp_data(1, _char_count, tile_data);
 
   for (uint8_t y = 0; y < 8; y++)
     for (uint8_t x = 0; x < 12; x++)
-      if (y * 12 + x < len)
+      if (y * 12 + x < _char_count)
         set_bkg_tile_xy(x + 1, y + 1, 1 + y * 12 + x);
 }
 ```
 
 <img src="./202601119-variable-width-text/font-on-screen-01.png" width="320" height="288" style="image-rendering: pixelated;">
 
+It works! With the dx & dy arguments, I can render the characters anywhere in a tile. This should make the next step easy: Variable-Width Text Rendering.
+
 ## Variable-Width Rendering
 
-To Be Continued...
+For my next function, rendering a line of text, I'm going to use a function like this:
+
+**font.h**
+```c
+#define font_letter_spacing 1
+#define font_space_width 2
+
+typedef struct {
+  const char *remainder;
+  uint8_t pixel_count;
+  uint8_t tile_count;
+} font_render_line_result_t;
+
+// Render a string into a 1bpp tile buffer.
+//
+// Characters from the string are rendered using font_render_character_1bpp,
+// starting at dx & dy. Characters are rendered until the end of the string, the
+// end of the line or the end of the available tiles.
+//
+// Once the end is reached, `remainder` is returned, representing a pointer to
+// the next character in the string not rendered, or the end of the string.
+// Additionally, the amount of tiles written to is returned as `tile_count`, and
+// the amount of pixels rendered is returned as `pixel_count`.
+font_render_line_result_t font_render_line_1bpp(
+  uint8_t *tiles,
+  uint8_t tiles_length,
+  int8_t dx,
+  int8_t dy,
+  const char *string
+);
+```
+
+**font.c**
+```c
+font_render_line_result_t font_render_line_1bpp(
+  uint8_t *tiles,
+  uint8_t tiles_length,
+  int8_t dx,
+  int8_t dy,
+  const char *string
+) {
+  uint8_t x = dx;
+  const char *current_char = string;
+
+  while (*current_char) {
+    char c = *current_char;
+
+    if (c == '\n')
+      break;
+
+    if (c == ' ') {
+      x += font_space_width;
+      current_char++;
+      continue;
+    }
+
+    uint8_t tile_x = x / 8;
+    int8_t offset_x = x % 8;
+
+    if (tile_x >= tiles_length)
+      break;
+
+    uint8_t w = font_render_character_1bpp(&tiles[tile_x * 8], offset_x, dy, c);
+
+    if (offset_x + w > 8 && tile_x + 1 < tiles_length) {
+      offset_x -= 8;
+      tile_x++;
+      font_render_character_1bpp(&tiles[tile_x * 8], offset_x, dy, c);
+    }
+
+    x += w + font_letter_spacing;
+    current_char++;
+  }
+
+  font_render_line_result_t result;
+  result.remainder = current_char;
+  result.pixel_count = (uint8_t)(x - dx);
+  result.tile_count = (uint8_t)((x + 7) / 8);
+
+  return result;
+}
+```
+
+**main.c**
+```c
+static void render_line(const char *text) {
+  uint8_t text_tile_data[_tile_size * 20];
+  memset(text_tile_data, 0, sizeof(text_tile_data));
+  font_render_line_1bpp(text_tile_data, 20, 4, 0, text);
+  set_bkg_1bpp_data(100, 20, text_tile_data);
+  for (uint8_t i = 0; i < 20; i++)
+    set_bkg_tile_xy(i, 10, 100 + i);
+}
+
+void main(void) {
+  render_line("Hello, world!! This is a variable-width string!");
+}
+```
+
+<img src="./202601119-variable-width-text/font-on-screen-02.png" width="320" height="288" style="image-rendering: pixelated;">

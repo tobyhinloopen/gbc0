@@ -41,3 +41,51 @@ uint8_t font_render_character_1bpp(uint8_t *tile, int8_t dx, int8_t dy, char c) 
 
   return width;
 }
+
+font_render_line_result_t font_render_line_1bpp(
+  uint8_t *tiles,
+  uint8_t tiles_length,
+  int8_t dx,
+  int8_t dy,
+  const char *string
+) {
+  uint8_t x = dx;
+  const char *current_char = string;
+
+  while (*current_char) {
+    char c = *current_char;
+
+    if (c == '\n')
+      break;
+
+    if (c == ' ') {
+      x += font_space_width;
+      current_char++;
+      continue;
+    }
+
+    uint8_t tile_x = x / 8;
+    int8_t offset_x = x % 8;
+
+    if (tile_x >= tiles_length)
+      break;
+
+    uint8_t w = font_render_character_1bpp(&tiles[tile_x * 8], offset_x, dy, c);
+
+    if (offset_x + w > 8 && tile_x + 1 < tiles_length) {
+      offset_x -= 8;
+      tile_x++;
+      font_render_character_1bpp(&tiles[tile_x * 8], offset_x, dy, c);
+    }
+
+    x += w + font_letter_spacing;
+    current_char++;
+  }
+
+  font_render_line_result_t result;
+  result.remainder = current_char;
+  result.pixel_count = (uint8_t)(x - dx);
+  result.tile_count = (uint8_t)((x + 7) / 8);
+
+  return result;
+}
