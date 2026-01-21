@@ -1,4 +1,5 @@
 #include "font_data.h"
+#include <stddef.h>
 
 const uint8_t font_data[278] = {
   /* <blank> */ 0x00,
@@ -193,3 +194,14 @@ const uint16_t font_data_indices[94] = {
   /* } */ 271,
   /* ~ */ 275,
 };
+
+const uint8_t *font_data_get(char c) {
+  if (c < font_data_ascii_offset || c > font_data_ascii_max)
+    return NULL;
+
+  uint16_t i = font_data_indices[(uint8_t)c - font_data_ascii_offset];
+  if (i == 0)
+    return NULL;
+
+  return &font_data[i];
+}
