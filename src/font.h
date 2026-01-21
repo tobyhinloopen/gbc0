@@ -12,6 +12,12 @@ uint8_t font_get_character_width(char c);
 // Returns the width of a string, up to the end of a string or new-line.
 uint8_t font_get_line_width(const char *string);
 
+// Render character data into a single 1bpp tile.
+void font_render_char_data_1bpp(uint8_t *tile, int8_t dx, int8_t dy, const uint8_t *char_data);
+
+// Render character data spanning two adjacent 1bpp tiles.
+void font_render_char_data_1bpp_span(uint8_t *tile1, uint8_t *tile2, int8_t dx, int8_t dy, const uint8_t *char_data);
+
 // Render a character into a 1bpp tile at a given destination in pixels. Writes
 // high pixels into the tile, safely cropping any pixels outside the tile.
 //

@@ -36,31 +36,35 @@ uint8_t font_get_line_width(const char *string) {
   return width > 0 ? width - font_letter_spacing : 0;
 }
 
-static void font_render_char_data_1bpp(
+void font_render_char_data_1bpp(
   uint8_t *tile, int8_t dx, int8_t dy,
   const uint8_t *char_data
 ) {
   uint8_t width = FONT_DATA_WIDTH(char_data);
   int8_t shift = 8 - dx - width;
-  FONT_RENDER_LOOP(char_data, width, dy,
-    if (shift >= 0)
+  if (shift >= 0) {
+    FONT_RENDER_LOOP(char_data, width, dy,
       tile[py] |= row << shift;
-    else
-      tile[py] |= row >> (-shift);
-  );
+    );
+  } else {
+    shift = -shift;
+    FONT_RENDER_LOOP(char_data, width, dy,
+      tile[py] |= row >> shift;
+    );
+  }
 }
 
-static void font_render_char_data_1bpp_span(
+void font_render_char_data_1bpp_span(
   uint8_t *tile1, uint8_t *tile2,
   int8_t dx, int8_t dy,
   const uint8_t *char_data
 ) {
   uint8_t width = FONT_DATA_WIDTH(char_data);
-  int8_t shift1 = 8 - dx - width;
-  int8_t shift2 = shift1 + 8;
+  uint8_t rshift = dx + width - 8;
+  uint8_t lshift = 8 - rshift;
   FONT_RENDER_LOOP(char_data, width, dy,
-    tile1[py] |= row >> (-shift1);
-    tile2[py] |= row << shift2;
+    tile1[py] |= row >> rshift;
+    tile2[py] |= row << lshift;
   );
 }
 

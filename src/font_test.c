@@ -6,6 +6,7 @@
 
 #define tile_data_length 20
 static uint8_t tile_data[tile_data_length * 8];
+static const uint8_t *bench_char_data;
 
 static void reset_tile_data(void) {
   memset(tile_data, 0, sizeof(tile_data));
@@ -87,8 +88,19 @@ static char *bench_font_render_line_1bpp(void) {
   return 0;
 }
 
+static char *bench_font_render_char_data_1bpp(void) {
+  font_render_char_data_1bpp(tile_data, 0, 0, bench_char_data);
+  return 0;
+}
+
+static char *bench_font_render_char_data_1bpp_span(void) {
+  font_render_char_data_1bpp_span(tile_data, &tile_data[8], 4, 0, bench_char_data);
+  return 0;
+}
+
 char *font_test(void) {
   mu_before_each = reset_tile_data;
+  bench_char_data = font_data_get('W');
   mu_run_test(test_font_render_character_1bpp_missing_character);
   mu_run_test(test_font_render_character_1bpp_known_width);
   mu_run_test(test_font_render_character_1bpp_known_data);
@@ -97,5 +109,7 @@ char *font_test(void) {
   mu_run_test(test_font_get_line_width);
   mu_run_bench("render_char", bench_font_render_character_1bpp);
   mu_run_bench("render_line", bench_font_render_line_1bpp);
+  mu_run_bench("char_data", bench_font_render_char_data_1bpp);
+  mu_run_bench("char_span", bench_font_render_char_data_1bpp_span);
   return 0;
 }
