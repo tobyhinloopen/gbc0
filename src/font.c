@@ -3,6 +3,17 @@
 
 #include <stdio.h>
 
+uint8_t font_get_character_width(char c) {
+  if (c < font_data_ascii_offset || c > font_data_ascii_max)
+    return 0;
+
+  uint16_t i = font_data_indices[(uint8_t)c - font_data_ascii_offset];
+  if (i == 0)
+    return 0;
+
+  return font_data[i] & 0x07;
+}
+
 uint8_t font_render_character_1bpp(uint8_t *tile, int8_t dx, int8_t dy, char c) {
   if (c < font_data_ascii_offset
   || c > font_data_ascii_max)
@@ -12,7 +23,7 @@ uint8_t font_render_character_1bpp(uint8_t *tile, int8_t dx, int8_t dy, char c) 
   if (i == 0)
     return 0;
 
-  uint8_t *char_data = &font_data[i];
+  const uint8_t *char_data = &font_data[i];
   uint8_t width = char_data[0] & 0x07;
   uint8_t height = (char_data[0] >> 3) & 0x07;
   dy += ((char_data[0] >> 6) & 0x03) | ((char_data[1] & 0x01) << 2);
@@ -82,9 +93,11 @@ font_render_line_result_t font_render_line_1bpp(
     current_char++;
   }
 
+  uint8_t rendered_width = (uint8_t)(x - dx);
+
   font_render_line_result_t result;
   result.remainder = current_char;
-  result.pixel_count = (uint8_t)(x - dx);
+  result.pixel_count = rendered_width > 0 ? rendered_width - font_letter_spacing : 0;
   result.tile_count = (uint8_t)((x + 7) / 8);
 
   return result;

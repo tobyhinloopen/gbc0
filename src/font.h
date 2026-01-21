@@ -6,6 +6,9 @@
 #define font_letter_spacing 1
 #define font_space_width 2
 
+// Returns the width of a character in pixels, or `0` if no character was found.
+uint8_t font_get_character_width(char c);
+
 // Render a character into a 1bpp tile at a given destination in pixels. Writes
 // high pixels into the tile, safely cropping any pixels outside the tile.
 //

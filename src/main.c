@@ -73,10 +73,10 @@ void main(void) {
   //   set_bkg_tile_xy(i, 0, i);
   // VBK_REG = VBK_TILES;
 
-  // if (test_main()) {
-  //   vsync();
-  //   return;
-  // }
+  if (test_main()) {
+    vsync();
+    return;
+  }
 
   render_font_characters();
   render_line("Hello, world!! This is a variable-width string!");

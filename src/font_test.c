@@ -35,8 +35,22 @@ static char *test_font_render_character_1bpp_known_character(void) {
   return 0;
 }
 
+static char *test_font_render_line_1bpp_simple(void) {
+  memset(tile_data, 0, sizeof(tile_data));
+  font_render_line_result_t result = font_render_line_1bpp(tile_data, 4, 0, 0, "Hi");
+
+  uint8_t expected_pixels = font_get_character_width('H') + font_letter_spacing + font_get_character_width('i');
+
+  mu_assert_eq(*result.remainder, '\0', "%c");
+  mu_assert_eq(result.pixel_count, expected_pixels, "%d");
+  mu_assert_eq(result.tile_count, 1, "%d");
+
+  return 0;
+}
+
 char *font_test(void) {
   mu_run_test(test_font_render_character_1bpp_missing_character);
   mu_run_test(test_font_render_character_1bpp_known_character);
+  mu_run_test(test_font_render_line_1bpp_simple);
   return 0;
 }
