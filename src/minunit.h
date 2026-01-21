@@ -8,13 +8,12 @@
 
 // Based on this: https://gist.github.com/sam159/0849461161e86249f849
 
-#define mu_run_test(test)                    \
-  do {                                       \
-    if (mu_before_each) mu_before_each();    \
-    char* message = test();                  \
-    vsync();                                 \
-    mu_tests_run++;                          \
-    if (message) return message;             \
+#define mu_run_test(test)        \
+  do {                           \
+    mu_test_setup();             \
+    char* message = test();      \
+    mu_test_teardown();          \
+    if (message) return message; \
   } while (0)
 
 #define mu_run_suite(test)       \
@@ -30,28 +29,20 @@ extern char mu_error_buffer[256];
 extern void (*mu_before_each)(void);
 
 void mu_init(void);
+void mu_test_setup(void);
+void mu_test_teardown(void);
+void mu_bench_start(void);
+uint16_t mu_bench_end(void);
 
-#define mu_run_bench(label, test)                         \
-  do {                                                    \
-    uint8_t _start, _end;                                 \
-    uint8_t _ie;                                          \
-    char* message;                                        \
-    if (mu_before_each) mu_before_each();                 \
-    _ie = IE_REG;                                         \
-    disable_interrupts();                                 \
-    TAC_REG = 0x00;                                       \
-    DIV_REG = 0;                                          \
-    TIMA_REG = 0;                                         \
-    TMA_REG = 0;                                          \
-    TAC_REG = TACF_START | TACF_4KHZ;                     \
-    _start = TIMA_REG;                                    \
-    message = test();                                     \
-    _end = TIMA_REG;                                      \
-    IE_REG = _ie;                                         \
-    if (_ie) enable_interrupts();                         \
-    mu_tests_run++;                                       \
-    if (message) return message;                          \
-    printf("%s: %hu\n", label, (uint8_t)(_end - _start)); \
+#define mu_run_bench(label, test)       \
+  do {                                  \
+    mu_test_setup();                    \
+    mu_bench_start();                   \
+    char* message = test();             \
+    uint16_t _cycles = mu_bench_end();  \
+    mu_test_teardown();                 \
+    if (message) return message;        \
+    printf("%s: %u\n", label, _cycles); \
   } while (0)
 
 #define mu_error(format, ...)                                        \
