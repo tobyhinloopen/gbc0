@@ -3,21 +3,17 @@
 
 #include <stdio.h>
 
-static const uint8_t width_mask_lut[8] = {0, 1, 3, 7, 15, 31, 63, 127};
-
+// New format: byte 0-1 = metadata (same as before), byte 2+ = one byte per row
 #define FONT_RENDER_LOOP(char_data, width, dy, ROW_HANDLER)                   \
   do {                                                                        \
     uint8_t height = FONT_DATA_HEIGHT(char_data);                             \
     dy += FONT_DATA_VERTICAL_OFFSET(char_data);                               \
-    uint8_t bit_index = 9;                                                    \
-    uint8_t width_mask = width_mask_lut[width];                               \
-    for (uint8_t y = 0; y < height; y++, bit_index += width) {                \
+    const uint8_t *row_ptr = char_data + 2;                                   \
+    for (uint8_t y = 0; y < height; y++, row_ptr++) {                         \
       int8_t py = dy + (int8_t)y;                                             \
       if (py < 0 || py >= 8)                                                  \
         continue;                                                             \
-      uint8_t row = ((char_data[bit_index >> 3] |                             \
-        ((uint16_t)char_data[(bit_index >> 3) + 1] << 8)) >>                  \
-        (bit_index & 7)) & width_mask;                                        \
+      uint8_t row = *row_ptr;                                                 \
       ROW_HANDLER                                                             \
     }                                                                         \
   } while (0)

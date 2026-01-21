@@ -109,8 +109,8 @@
     let totalByteSize = 1;
     for (const char of characters) {
       if (char.skip) continue;
-      const bitSize = metadataSize + char.size;
-      const byteSize = Math.ceil(bitSize / 8);
+      // Byte-aligned format: 2 bytes metadata + 1 byte per row
+      const byteSize = 2 + char.height;
       totalByteSize += byteSize;
       const bytes = new Uint8Array(byteSize);
 
@@ -124,23 +124,16 @@
       bytes[0] |= ((char.offset & 0x03) << 6);
       bytes[1] |= ((char.offset & 0x04) >> 2);
 
-      // extract minX/maxY/minY/maxY region from bytes8x8, write into bytes
-      let bitIndex = metadataSize; // Start after the 9 metadata bits
-
+      // Store one byte per row, starting at byte 2
+      // Bit 0 = rightmost pixel (maxX), higher bits = leftward pixels
       for (let y = char.minY; y <= char.maxY; y++) {
-        // Store pixels in reverse x order (MSB-first) for efficient Game Boy tile copying
-        for (let x = char.maxX; x >= char.minX; x--) {
-          // Check if this pixel is set in the original 8x8 data
-          const high = (char.bytes8x8[y] & (1 << x)) !== 0;
-
-          if (high) {
-            const byteIndex = Math.floor(bitIndex / 8);
-            const bitOffset = bitIndex % 8;
-            bytes[byteIndex] |= (1 << bitOffset);
+        let rowByte = 0;
+        for (let x = char.minX; x <= char.maxX; x++) {
+          if (char.bytes8x8[y] & (1 << x)) {
+            rowByte |= (1 << (char.maxX - x));
           }
-
-          bitIndex++;
         }
+        bytes[2 + (y - char.minY)] = rowByte;
       }
 
       char.packedBytes = bytes;
