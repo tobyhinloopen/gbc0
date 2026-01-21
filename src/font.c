@@ -26,8 +26,7 @@ uint8_t font_get_line_width(const char *string) {
 }
 
 uint8_t font_render_character_1bpp(uint8_t *tile, int8_t dx, int8_t dy, char c) {
-  if (c < font_data_ascii_offset
-  || c > font_data_ascii_max)
+  if (c < font_data_ascii_offset || c > font_data_ascii_max)
     return 0;
 
   uint16_t i = font_data_indices[(uint8_t)c - font_data_ascii_offset];
@@ -40,25 +39,28 @@ uint8_t font_render_character_1bpp(uint8_t *tile, int8_t dx, int8_t dy, char c) 
   dy += ((char_data[0] >> 6) & 0x03) | ((char_data[1] & 0x01) << 2);
 
   uint8_t bit_index = 9;
+  uint8_t width_mask = (1 << width) - 1;
+  int8_t shift = 8 - dx - width;
 
-  // TODO: Copy row-by-row, not pixel-by-pixel
-  // TODO: Test dx/dy beyond tile boundaries (both negative and positive)
   for (uint8_t y = 0; y < height; y++) {
     int8_t py = dy + (int8_t)y;
 
-    if (py < 0 || py >= 8)
+    if (py < 0 || py >= 8) {
+      bit_index += width;
       continue;
-
-    for (uint8_t x = 0; x < width; x++, bit_index++) {
-      int8_t px = dx + (int8_t)x;
-
-      if (px < 0
-      || px >= 8
-      || !((char_data[bit_index >> 3] >> (bit_index & 7)) & 1u))
-        continue;
-
-      tile[py] |= (uint8_t)(1u << (7 - px));
     }
+
+    // Extract row bits (may span 2 bytes)
+    uint16_t word = char_data[bit_index >> 3] | ((uint16_t)char_data[(bit_index >> 3) + 1] << 8);
+    uint8_t row = (word >> (bit_index & 7)) & width_mask;
+
+    // Place row in tile (clipped bits naturally overflow or fall off)
+    if (shift >= 0)
+      tile[py] |= row << shift;
+    else
+      tile[py] |= row >> (-shift);
+
+    bit_index += width;
   }
 
   return width;

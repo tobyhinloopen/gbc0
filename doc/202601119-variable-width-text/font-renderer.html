@@ -128,7 +128,8 @@
       let bitIndex = metadataSize; // Start after the 9 metadata bits
 
       for (let y = char.minY; y <= char.maxY; y++) {
-        for (let x = char.minX; x <= char.maxX; x++) {
+        // Store pixels in reverse x order (MSB-first) for efficient Game Boy tile copying
+        for (let x = char.maxX; x >= char.minX; x--) {
           // Check if this pixel is set in the original 8x8 data
           const high = (char.bytes8x8[y] & (1 << x)) !== 0;
 

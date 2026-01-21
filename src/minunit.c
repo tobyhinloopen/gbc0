@@ -36,7 +36,7 @@ void mu_bench_start(void) {
   bench_saved_ie = IE_REG;
   IE_REG |= TIM_IFLAG;
   enable_interrupts();
-  TAC_REG = TACF_START | TACF_4KHZ;
+  TAC_REG = TACF_START | TACF_16KHZ;
 }
 
 uint16_t mu_bench_end(void) {
