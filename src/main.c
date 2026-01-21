@@ -86,18 +86,17 @@ void main(void) {
   render_font_characters();
   render_line("Hello, world!! This is a variable-width string!");
   vsync();
-  return;
 
-  grid_init(5);
-  grid_random_fill(grid_width * 4);
-  renderer_render();
+  // grid_init(5);
+  // grid_random_fill(grid_width * 4);
+  // renderer_render();
 
-  // uint8_t i = 0;
-  while(1) {
-    vsync();
+  // // uint8_t i = 0;
+  // while(1) {
+  //   vsync();
 
-    // if (++i % 16 == 0)
-    //   SCY_REG++;
-    renderer_render();
-  }
+  //   // if (++i % 16 == 0)
+  //   //   SCY_REG++;
+  //   renderer_render();
+  // }
 }
