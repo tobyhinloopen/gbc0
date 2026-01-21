@@ -77,6 +77,11 @@ void main(void) {
     vsync();
     return;
   }
+  vsync();
+
+#ifdef TEST_ONLY
+  return;
+#endif
 
   render_font_characters();
   render_line("Hello, world!! This is a variable-width string!");
