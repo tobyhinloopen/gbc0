@@ -43,7 +43,7 @@ static char *test_font_render_character_1bpp_known_data(void) {
 }
 
 static char *test_font_render_line_1bpp_simple(void) {
-  font_render_line_result_t result = font_render_line_1bpp(tile_data, tile_data_length, 0, 0, "Hi");
+  font_render_line_result_t result = font_render_line_1bpp(tile_data, tile_data_length, tile_data_length * 8, 0, 0, "Hi");
 
   uint8_t expected_pixels = font_get_line_width("Hi");
   uint8_t expected_tiles = (expected_pixels + 7) / 8;
@@ -58,12 +58,23 @@ static char *test_font_render_line_1bpp_simple(void) {
 static char *test_font_render_line_1bpp_too_long(void) {
   const uint8_t short_length = 4;
   const char *text = "This is a long string!";
-  font_render_line_result_t result = font_render_line_1bpp(tile_data, short_length, 0, 0, text);
+  font_render_line_result_t result = font_render_line_1bpp(tile_data, short_length, short_length * 8, 0, 0, text);
 
   mu_assert(*result.remainder != '\0');
   mu_assert(result.remainder > text);
   mu_assert_eq(result.tile_count, short_length, "%d");
   mu_assert(result.pixel_count <= short_length * 8);
+
+  return 0;
+}
+
+static char *test_font_render_line_1bpp_max_width(void) {
+  // A=3px + 1px spacing = 4px each
+  // "AA" = 7px (fits in 10), "AAA" = 11px (exceeds 10)
+  font_render_line_result_t result = font_render_line_1bpp(tile_data, tile_data_length, 10, 0, 0, "AAAA");
+
+  mu_assert_eq(*result.remainder, 'A', "%c");
+  mu_assert_eq(result.pixel_count, 7, "%d"); // "AA" = 3+1+3 = 7px
 
   return 0;
 }
@@ -78,13 +89,52 @@ static char *test_font_get_line_width(void) {
   return 0;
 }
 
+static char *test_font_render_text_empty(void) {
+  font_render_text_result_t result = font_render_text_1bpp(tile_data, 10, 5, 80, 0, 0, "");
+  mu_assert_eq(result.line_count, 0, "%d");
+  mu_assert_eq(*result.remainder, '\0', "%c");
+  return 0;
+}
+
+static char *test_font_render_text_single_line(void) {
+  font_render_text_result_t result = font_render_text_1bpp(tile_data, 10, 5, 80, 0, 0, "Hi");
+  mu_assert_eq(result.line_count, 1, "%d");
+  mu_assert_eq(*result.remainder, '\0', "%c");
+  return 0;
+}
+
+static char *test_font_render_text_newline(void) {
+  font_render_text_result_t result = font_render_text_1bpp(tile_data, 10, 5, 80, 0, 0, "Hi\nHo");
+  mu_assert_eq(result.line_count, 2, "%d");
+  mu_assert_eq(*result.remainder, '\0', "%c");
+  return 0;
+}
+
+static char *test_font_render_text_overflow_wrap(void) {
+  // Use tiles_width=1 (8 pixels max per row)
+  // 'A' is 3px wide + 1px spacing = 4px per char
+  // "AA" = 7px fits, "AAA" = 11px overflows
+  font_render_text_result_t result = font_render_text_1bpp(tile_data, 1, 5, 8, 0, 0, "AAA");
+  mu_assert(result.line_count >= 2);
+  mu_assert_eq(*result.remainder, '\0', "%c");
+  return 0;
+}
+
+static char *test_font_render_text_height_overflow(void) {
+  // Only 2 rows available, but 3 lines of text
+  font_render_text_result_t result = font_render_text_1bpp(tile_data, 10, 2, 80, 0, 0, "A\nB\nC");
+  mu_assert_eq(result.line_count, 2, "%d");
+  mu_assert_eq(*result.remainder, 'C', "%c");
+  return 0;
+}
+
 static char *bench_font_render_character_1bpp(void) {
   font_render_character_1bpp(tile_data, 0, 0, 'W');
   return 0;
 }
 
 static char *bench_font_render_line_1bpp(void) {
-  font_render_line_1bpp(tile_data, tile_data_length, 0, 0, "Hello, world!");
+  font_render_line_1bpp(tile_data, tile_data_length, tile_data_length * 8, 0, 0, "Hello, world!");
   return 0;
 }
 
@@ -106,7 +156,13 @@ char *font_test(void) {
   mu_run_test(test_font_render_character_1bpp_known_data);
   mu_run_test(test_font_render_line_1bpp_simple);
   mu_run_test(test_font_render_line_1bpp_too_long);
+  mu_run_test(test_font_render_line_1bpp_max_width);
   mu_run_test(test_font_get_line_width);
+  mu_run_test(test_font_render_text_empty);
+  mu_run_test(test_font_render_text_single_line);
+  mu_run_test(test_font_render_text_newline);
+  mu_run_test(test_font_render_text_overflow_wrap);
+  mu_run_test(test_font_render_text_height_overflow);
   mu_run_bench("render_char", bench_font_render_character_1bpp);
   mu_run_bench("render_line", bench_font_render_line_1bpp);
   mu_run_bench("char_data", bench_font_render_char_data_1bpp);

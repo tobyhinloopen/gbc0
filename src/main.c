@@ -30,10 +30,27 @@ static void render_font_characters(void) {
 static void render_line(const char *text) {
   uint8_t text_tile_data[_tile_size * 20];
   memset(text_tile_data, 0, sizeof(text_tile_data));
-  font_render_line_1bpp(text_tile_data, 20, 4, 0, text);
+  font_render_line_1bpp(text_tile_data, 20, 20 * 8, 4, 0, text);
   set_bkg_1bpp_data(100, 20, text_tile_data);
   for (uint8_t i = 0; i < 20; i++)
     set_bkg_tile_xy(i, 10, 100 + i);
+}
+
+#define _text_width 20
+#define _text_height 8
+#define _text_tile_start 120
+
+#define _text_pad_left 2
+#define _text_pad_right 2
+
+static void render_text(const char *text) {
+  static uint8_t text_tile_data[_tile_size * _text_width * _text_height];
+  memset(text_tile_data, 0, sizeof(text_tile_data));
+  font_render_text_1bpp(text_tile_data, _text_width, _text_height, _text_width * 8 - _text_pad_right, _text_pad_left, 0, text);
+  set_bkg_1bpp_data(_text_tile_start, _text_width * _text_height, text_tile_data);
+  for (uint8_t y = 0; y < _text_height; y++)
+    for (uint8_t x = 0; x < _text_width; x++)
+      set_bkg_tile_xy(x, y, _text_tile_start + y * _text_width + x);
 }
 
 const uint16_t bg_palette0[4] = { 0x7FFF, 0x001F, 0x03E0, 0x7C00 };
@@ -83,8 +100,24 @@ void main(void) {
   return;
 #endif
 
+  printf("Press A to continue.\n");
+
+  while (!(joypad() & J_A))
+    vsync();
+  while (joypad() & J_A)
+    vsync();
+
   render_font_characters();
   render_line("Hello, world!! This is a variable-width string!");
+  render_text("Hello,\n\nThis is an important message. And a very long one, that might wrap.\n\nThanks.");
+  vsync();
+
+  while (!(joypad() & J_A))
+    vsync();
+  while (joypad() & J_A)
+    vsync();
+
+  render_text("You pressed A!\n\nThis is the second message.");
   vsync();
 
   // grid_init(5);

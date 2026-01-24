@@ -31,11 +31,16 @@ typedef struct {
   uint8_t tile_count;
 } font_render_line_result_t;
 
+typedef struct {
+  const char *remainder;
+  uint8_t line_count;
+} font_render_text_result_t;
+
 // Render a string into a 1bpp tile buffer.
 //
 // Characters from the string are rendered using font_render_character_1bpp,
 // starting at dx & dy. Characters are rendered until the end of the string, the
-// end of the line or the end of the available tiles.
+// end of the line, max_width is reached, or the tile buffer is exhausted.
 //
 // Once the end is reached, `remainder` is returned, representing a pointer to
 // the next character in the string not rendered, or the end of the string.
@@ -44,7 +49,23 @@ typedef struct {
 font_render_line_result_t font_render_line_1bpp(
   uint8_t *tiles,
   uint8_t tiles_length,
+  uint8_t max_width,
   int8_t dx,
   int8_t dy,
   const char *string
+);
+
+// Render a multiline string into a rectangular 1bpp tile buffer.
+//
+// Renders text line by line, wrapping to the next row on newline or when
+// max_width is reached. Returns the remainder (unrendered text) if
+// tiles_height rows are exhausted, and the number of lines rendered.
+font_render_text_result_t font_render_text_1bpp(
+  uint8_t *tiles,
+  uint8_t tiles_width,
+  uint8_t tiles_height,
+  uint8_t max_width,
+  int8_t dx,
+  int8_t dy,
+  const char *text
 );

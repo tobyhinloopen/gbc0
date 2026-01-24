@@ -78,6 +78,7 @@ uint8_t font_render_character_1bpp(uint8_t *tile, int8_t dx, int8_t dy, char c) 
 font_render_line_result_t font_render_line_1bpp(
   uint8_t *tiles,
   uint8_t tiles_length,
+  uint8_t max_width,
   int8_t dx,
   int8_t dy,
   const char *string
@@ -92,6 +93,8 @@ font_render_line_result_t font_render_line_1bpp(
       break;
 
     if (c == ' ') {
+      if (x + font_space_width > max_width)
+        break;
       x += font_space_width;
       current_char++;
       continue;
@@ -110,6 +113,9 @@ font_render_line_result_t font_render_line_1bpp(
     }
 
     uint8_t w = FONT_DATA_WIDTH(char_data);
+    if (x + w > max_width)
+      break;
+
     uint8_t *tile1 = &tiles[tile_x * 8];
 
     if (offset_x + w > 8 && tile_x + 1 < tiles_length)
@@ -127,6 +133,40 @@ font_render_line_result_t font_render_line_1bpp(
   result.remainder = current_char;
   result.pixel_count = rendered_width > 0 ? rendered_width - font_letter_spacing : 0;
   result.tile_count = (uint8_t)((x + 7) / 8);
+
+  return result;
+}
+
+font_render_text_result_t font_render_text_1bpp(
+  uint8_t *tiles,
+  uint8_t tiles_width,
+  uint8_t tiles_height,
+  uint8_t max_width,
+  int8_t dx,
+  int8_t dy,
+  const char *text
+) {
+  font_render_text_result_t result;
+  result.line_count = 0;
+  result.remainder = text;
+
+  if (!*text) {
+    return result;
+  }
+
+  uint8_t row_stride = tiles_width * 8;
+
+  while (result.line_count < tiles_height && *result.remainder) {
+    uint8_t *row_tiles = tiles + result.line_count * row_stride;
+    font_render_line_result_t line = font_render_line_1bpp(
+      row_tiles, tiles_width, max_width, dx, dy, result.remainder
+    );
+    result.line_count++;
+    result.remainder = line.remainder;
+
+    if (*result.remainder == '\n')
+      result.remainder++;
+  }
 
   return result;
 }
