@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include <stdio.h>
+#include "font_stdio.h"
 
 #include "font_test.h"
 #include "grid_test.h"
@@ -19,11 +19,11 @@ int test_main(void) {
   mu_init();
   char *result = all_tests();
   if (result != 0) {
-    printf("%s\n", result);
+    font_printf("%s\n", result);
   } else {
-    printf("ALL TESTS PASSED\n");
+    font_printf("ALL TESTS PASSED\n");
   }
-  printf("Tests run: %d\n", mu_tests_run);
+  font_printf("Tests run: %d\n", mu_tests_run);
 
   return result != 0;
 }

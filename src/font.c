@@ -1,8 +1,6 @@
 #include "font.h"
 #include "font_data.h"
 
-#include <stdio.h>
-
 // New format: byte 0-1 = metadata (same as before), byte 2+ = one byte per row
 #define FONT_RENDER_LOOP(char_data, width, dy, ROW_HANDLER)                   \
   do {                                                                        \

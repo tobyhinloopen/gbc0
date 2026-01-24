@@ -1,6 +1,6 @@
 #include <gb/gb.h>
 #include <gb/cgb.h>
-#include <stdio.h>
+#include "font_stdio.h"
 #include "grid.h"
 #include "rand.h"
 #include "renderer.h"
@@ -100,7 +100,7 @@ void main(void) {
   return;
 #endif
 
-  printf("Press A to continue.\n");
+  font_printf("Press A to continue.\n");
 
   while (!(joypad() & J_A))
     vsync();

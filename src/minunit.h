@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "font_stdio.h"
 
 // Based on this: https://gist.github.com/sam159/0849461161e86249f849
 
@@ -42,7 +43,7 @@ uint16_t mu_bench_end(void);
     uint16_t _cycles = mu_bench_end();  \
     mu_test_teardown();                 \
     if (message) return message;        \
-    printf("%s: %u\n", label, _cycles); \
+    font_printf("%s: %u\n", label, _cycles); \
   } while (0)
 
 #define mu_error(format, ...)                                        \
