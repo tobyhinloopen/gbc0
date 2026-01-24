@@ -24,7 +24,7 @@ static void render_font_characters(void) {
   for (uint8_t y = 0; y < 8; y++)
     for (uint8_t x = 0; x < 12; x++)
       if (y * 12 + x < _char_count)
-        set_bkg_tile_xy(x + 1, y + 1, 1 + y * 12 + x);
+        set_bkg_tile_xy(x + 1, y + 6, 1 + y * 12 + x);
 }
 
 static void render_line(const char *text) {
