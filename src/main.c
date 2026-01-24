@@ -52,9 +52,9 @@ void main(void) {
   uint8_t i = 0;
   while(1) {
     vsync();
+    renderer_render();  // VRAM writes first, right after VBlank starts
 
     if (++i % 16 == 0)
       grid_raise_pixel();
-    renderer_render();
   }
 }

@@ -43,14 +43,14 @@ static void renderer_render_row(uint8_t grid_y) {
 }
 
 void renderer_render(void) {
-  SCY_REG = grid_pixel_offset + scroll_base;
-
   if (grid_shifted) {
     grid_shifted = false;
     scroll_base += 8;
     tilemap_base = (tilemap_base + 1) & 31;
     renderer_render_row(0);
   }
+
+  SCY_REG = grid_pixel_offset + scroll_base;
 }
 
 void renderer_render_all(void) {
