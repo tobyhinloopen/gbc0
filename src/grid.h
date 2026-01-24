@@ -7,6 +7,7 @@
 #define grid_height 32
 #define grid_playable_min_y 1
 #define grid_playable_max_y 17
+#define grid_max_block_types 6
 
 typedef struct {
   uint8_t blocks[grid_width];
@@ -17,7 +18,7 @@ typedef struct {
 extern grid_row_t grid_rows[grid_height];
 extern uint8_t grid_column_heights[grid_width];
 
-// The number of distinct normal blocks, usually 5 or 6
+// The number of distinct normal blocks (5 to grid_max_block_types)
 extern uint8_t grid_block_id_count;
 
 // Clears the grid & set a tile id count.

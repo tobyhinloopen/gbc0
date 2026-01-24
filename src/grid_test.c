@@ -9,7 +9,7 @@ static char *bench_grid_init(void) {
 }
 
 static char *bench_grid_random_fill(void) {
-  grid_random_fill(10);
+  grid_random_fill(9);
   return 0;
 }
 

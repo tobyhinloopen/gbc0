@@ -8,7 +8,7 @@ uint8_t grid_column_heights[grid_width];
 uint8_t grid_block_id_count = 0;
 
 void grid_init(uint8_t block_id_count) {
-  assert(block_id_count == 5 || block_id_count == 6);
+  assert(block_id_count >= 5 && block_id_count <= grid_max_block_types);
   grid_block_id_count = block_id_count;
   memset(grid_rows, 0, sizeof(grid_rows));
   memset(grid_column_heights, 0, sizeof(grid_column_heights));

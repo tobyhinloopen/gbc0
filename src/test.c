@@ -9,8 +9,8 @@
 
 char *all_tests(void) {
   mu_run_suite(font_test);
-  // mu_run_suite(grid_test);
-  // mu_run_suite(rand_test);
+  mu_run_suite(grid_test);
+  mu_run_suite(rand_test);
 
   return 0;
 }
