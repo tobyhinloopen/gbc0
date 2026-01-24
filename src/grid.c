@@ -6,16 +6,22 @@
 grid_row_t grid_rows[grid_height];
 uint8_t grid_column_heights[grid_width];
 uint8_t grid_block_id_count = 0;
+uint8_t grid_pixel_offset = 0;
+bool grid_shifted = false;
 
 void grid_init(uint8_t block_id_count) {
   assert(block_id_count >= 5 && block_id_count <= grid_max_block_types);
   grid_block_id_count = block_id_count;
+  grid_pixel_offset = 0;
+  grid_shifted = false;
   memset(grid_rows, 0, sizeof(grid_rows));
   memset(grid_column_heights, 0, sizeof(grid_column_heights));
 }
 
-void grid_random_fill_row(uint8_t r) {
-  (void)r;
+void grid_random_fill_row(uint8_t y) {
+  grid_row_t *row = &grid_rows[y];
+  for (uint8_t x = 0; x < grid_width; x++)
+    row->blocks[x] = 1 + rand_next() % grid_block_id_count;
 }
 
 uint8_t grid_random_fill(uint8_t c) {
@@ -46,4 +52,16 @@ uint8_t grid_count_playable_blocks(void) {
   }
 
   return c;
+}
+
+void grid_raise_pixel(void) {
+  if (++grid_pixel_offset >= 8) {
+    grid_pixel_offset = 0;
+    // Shift all rows up
+    for (uint8_t y = grid_height - 1; y > 0; y--)
+      grid_rows[y] = grid_rows[y - 1];
+    // Generate new bottom row
+    grid_random_fill_row(0);
+    grid_shifted = true;
+  }
 }

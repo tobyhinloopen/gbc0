@@ -14,5 +14,8 @@ extern uint8_t renderer_block_palettes[grid_max_block_types + 1];
 // Initialize renderer - loads tile data into VRAM
 void renderer_init(void);
 
-// Render the grid to the screen
+// Render the grid to the screen (lightweight - only updates on shift)
 void renderer_render(void);
+
+// Full render of all grid rows (call once at startup)
+void renderer_render_all(void);

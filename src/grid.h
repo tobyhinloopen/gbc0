@@ -21,6 +21,12 @@ extern uint8_t grid_column_heights[grid_width];
 // The number of distinct normal blocks (5 to grid_max_block_types)
 extern uint8_t grid_block_id_count;
 
+// Current pixel offset within tile (0-7)
+extern uint8_t grid_pixel_offset;
+
+// Set to true when a tile shift occurs (renderer should clear after handling)
+extern bool grid_shifted;
+
 // Clears the grid & set a tile id count.
 void grid_init(uint8_t block_id_count);
 
@@ -32,9 +38,11 @@ uint8_t grid_random_fill(uint8_t n);
 // Count number of interactable blocks in playable area
 uint8_t grid_count_playable_blocks(void);
 
+// Raise the grid by 1 pixel
+void grid_raise_pixel(void);
+
+// Fill row y with random blocks
+void grid_random_fill_row(uint8_t y);
+
 // void grid_set(uint8_t i, uint8_t block_id);
 // void grid_set_xy(uint8_t x, uint8_t y, uint8_t block_id);
-// void grid_random_fill_row(uint8_t y);
-// void grid_shift_pixel(void);
-// void grid_shift_tile(void);
-// void grid_last_row_fill(void);

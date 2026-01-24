@@ -39,9 +39,55 @@ static char *test_grid_random_fill(void) {
   return 0;
 }
 
+static char *test_grid_random_fill_row(void) {
+  grid_init(5);
+
+  // Row 0 should be empty
+  for (uint8_t x = 0; x < grid_width; x++)
+    mu_assert_eq(grid_rows[0].blocks[x], 0, "%u");
+
+  grid_random_fill_row(0);
+
+  // Row 0 should now have blocks in all columns
+  for (uint8_t x = 0; x < grid_width; x++) {
+    mu_assert(grid_rows[0].blocks[x] >= 1);
+    mu_assert(grid_rows[0].blocks[x] <= grid_block_id_count);
+  }
+
+  return 0;
+}
+
+static char *test_grid_raise_pixel(void) {
+  grid_init(5);
+  mu_assert_eq(grid_pixel_offset, 0, "%u");
+
+  // Raise 7 times - should not shift yet
+  for (uint8_t i = 0; i < 7; i++)
+    grid_raise_pixel();
+  mu_assert_eq(grid_pixel_offset, 7, "%u");
+
+  // Place a marker block at row 1
+  grid_rows[1].blocks[0] = 3;
+
+  // Raise once more - should wrap and shift
+  grid_raise_pixel();
+  mu_assert_eq(grid_pixel_offset, 0, "%u");
+
+  // Marker should have moved to row 2
+  mu_assert_eq(grid_rows[2].blocks[0], 3, "%u");
+
+  // Row 0 should have new blocks
+  for (uint8_t x = 0; x < grid_width; x++)
+    mu_assert(grid_rows[0].blocks[x] >= 1);
+
+  return 0;
+}
+
 char *grid_test(void) {
   mu_run_test(test_grid_init);
   mu_run_test(test_grid_random_fill);
+  mu_run_test(test_grid_random_fill_row);
+  mu_run_test(test_grid_raise_pixel);
 
   mu_run_bench("grid_init", bench_grid_init);
   mu_run_bench("grid_random_fill", bench_grid_random_fill);

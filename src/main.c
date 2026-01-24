@@ -19,17 +19,14 @@ const uint16_t block_palettes[grid_max_block_types][4] = {
 void main(void) {
   DISPLAY_ON;
   SHOW_BKG;
-  // SHOW_WIN;
-
-  // WX_REG = (uint8_t)(152 + 7);
-  // WY_REG = 0;
-
   if (_cpu == CGB_TYPE) {
+    // cpu_fast();
     for (uint8_t i = 0; i < grid_max_block_types; i++)
       set_bkg_palette(i, 1, block_palettes[i]);
   } else {
     BGP_REG = 0xE4;
   }
+
 
   rand_init();
   renderer_init();
@@ -49,14 +46,15 @@ void main(void) {
 
   grid_init(5);
   grid_random_fill(grid_width * 4);
-  renderer_render();
+  grid_random_fill_row(0);
+  renderer_render_all();
 
   uint8_t i = 0;
   while(1) {
     vsync();
 
     if (++i % 16 == 0)
-      SCY_REG++;
+      grid_raise_pixel();
     renderer_render();
   }
 }
