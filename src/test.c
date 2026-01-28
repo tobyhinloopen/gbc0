@@ -3,14 +3,14 @@
 #include "font_stdio.h"
 
 #include "font_test.h"
-#include "grid_test.h"
+#include "actor_test.h"
+#include "room_test.h"
 #include "minunit.h"
-#include "rand_test.h"
 
 char *all_tests(void) {
   mu_run_suite(font_test);
-  mu_run_suite(grid_test);
-  mu_run_suite(rand_test);
+  mu_run_suite(actor_test);
+  mu_run_suite(room_test);
 
   return 0;
 }
